@@ -38,6 +38,11 @@ fn update_rust_api(id: i32) -> Value {
     })
 }
 
+#[catch(404)]
+fn not_found() -> Value {
+    json!("Not found")
+}
+
 #[delete("/rust-api/<_id>")]
 fn delete_rust_api(_id: i32) -> status::NoContent {
     status::NoContent
@@ -53,6 +58,7 @@ async fn main() {
             update_rust_api,
             delete_rust_api
         ])
+        .register("/", catchers![not_found])
         .launch()
         .await;
 }
