@@ -1,5 +1,8 @@
 #[macro_use] extern crate rocket;
 
+use rocket::http::Status;
+use rocket::Request;
+use rocket::request::{FromRequest, Outcome};
 use rocket::response::status;
 use rocket::serde::json::{Value, json};
 
@@ -35,6 +38,20 @@ struct BasicAuth {
          })
      }
  }
+
+#[rocket::async_trait]
+impl<'r> FromRequest<'r> for BasicAuth {
+    type Error = ();
+    async fn from_request(request: &'r Request<'_>) -> Outcome<Self, Self::Error> {
+        let auth_header = request.headers().get_one("Authorization");
+        if let Some(auth_header) = auth_header {
+            if let Some(auth) = Self::from_authorization_header(auth_header) {
+                return Outcome::Success(auth)
+            }
+        }
+        Outcome::Failure((Status::Unauthorized, ()))
+    }
+}
 
 #[get("/rust-api")]
 fn get_rust_api() -> Value {
